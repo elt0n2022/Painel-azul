@@ -1,6 +1,15 @@
 // src/services/user.ts
 import { apiRequest } from "./api";
 
+interface LoginData {
+  email: string;
+  className?: string; // Ajuste conforme os parâmetros extras do seu backend se houver
+  password?: string;
+}
+
+// Envia as credenciais para o backend e retorna o token de acesso
+export const authLogin = (data: any) => apiRequest("POST", "/auth/login", data);
+
 // Busca os dados de um usuário específico ou a listagem geral se o backend suportar
 export const userGetAll = () => apiRequest("GET", "/users");
 
