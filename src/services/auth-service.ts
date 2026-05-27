@@ -1,12 +1,4 @@
-import { api } from "./api";
+import { apiRequest } from "./api";
 
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-export async function login(data: LoginData) {
-  const response = await api.post("/auth/login", data);
-
-  return response.data;
-}
+export const userCadastro = (dados: any) => apiRequest("POST", "/users/cadastro", dados);
+export const userLogin = (dados: any) => apiRequest("POST", "/users/login", dados);d
