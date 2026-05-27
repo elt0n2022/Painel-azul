@@ -1,34 +1,5 @@
-import { apiFetch } from "./api";
+import { apiRequest } from "./api";
 
-export async function getUsers() {
-  return apiFetch("/users");
-}
-
-export async function createUser(
-  data: any
-) {
-  return apiFetch("/users", {
-    method: "POST",
-
-    body: JSON.stringify(data),
-  });
-}
-
-export async function updateUser(
-  id: number,
-  data: any
-) {
-  return apiFetch(`/users/${id}`, {
-    method: "PUT",
-
-    body: JSON.stringify(data),
-  });
-}
-
-export async function deleteUser(
-  id: number
-) {
-  return apiFetch(`/users/${id}`, {
-    method: "DELETE",
-  });
-}
+export const userGet = (userId: string | number) => apiRequest("GET", `/users/${userId}`);
+export const userPut = (dados: any, userId: string | number) => apiRequest("PUT", `/users/${userId}`, dados);
+export const userGetById = (userId: string | number) => apiRequest("GET", `/usersEx/${userId}`);
