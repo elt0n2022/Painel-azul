@@ -1,34 +1,8 @@
-import { apiFetch } from "./api";
+// src/services/plan.ts
+import { apiRequest } from "./api";
 
-export async function getPlans() {
-  return apiFetch("/plans");
-}
+// Busca todos os planos cadastrados no banco
+export const planGet = () => apiRequest("GET", "/servicos"); 
 
-export async function createPlan(
-  data: any
-) {
-  return apiFetch("/plans", {
-    method: "POST",
-
-    body: JSON.stringify(data),
-  });
-}
-
-export async function updatePlan(
-  id: number,
-  data: any
-) {
-  return apiFetch(`/plans/${id}`, {
-    method: "PUT",
-
-    body: JSON.stringify(data),
-  });
-}
-
-export async function deletePlan(
-  id: number
-) {
-  return apiFetch(`/plans/${id}`, {
-    method: "DELETE",
-  });
-}
+// Caso precise deletar um plano no futuro
+export const planDelete = (planId: string | number) => apiRequest("DELETE", `/servicos/${planId}`);
