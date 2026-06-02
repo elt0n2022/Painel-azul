@@ -20,7 +20,7 @@ interface UserModalProps {
   // ✅ Atualizado para refletir a tipagem correta com 'tipo'
   user?: (UserFormData & { id: number }) | null; 
 }
-
+//
 export default function UserModal({
   open,
   onClose,
