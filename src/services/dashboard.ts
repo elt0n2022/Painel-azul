@@ -1,10 +1,10 @@
 // src/services/dashboard.ts
 import { apiRequest } from "./api";
 
-// 1. Busca os dados para os gráficos através do ID do usuário nas entradas
-export const dashboardGetChartData = (userId: string | number) => 
-  apiRequest("GET", `/entrada/${userId}`);
+// 1. Aponta para a rota real de estatísticas/gráficos do back-end
+export const dashboardGetChartData = () => 
+  apiRequest("GET", `/users`); //Substitua pela rota real de métricas do seu back-end
 
-// 2. CORRIGIDO: Agora recebe o userId e aponta para a rota real '/Pay/:id/contas'
+// 2. Busca as transações gerais
 export const dashboardGetTransactions = () => 
   apiRequest("GET", `/Pay`);

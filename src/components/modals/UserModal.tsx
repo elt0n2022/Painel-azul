@@ -70,7 +70,13 @@ export default function UserModal({
     const payload: any = {
       name: name.trim(),
       email: email.trim().toLowerCase(),
-      tipo: tipo, // ✅ Injetando o tipo no payload
+      tipo: tipo,
+    };
+
+    const payload1: any = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password: senhaPadrao,
     };
 
     try {
@@ -84,7 +90,7 @@ export default function UserModal({
       } else {
         // 🆕 MODO CRIAÇÃO: Mantém o comportamento de cadastro enviando a senha padrão
         payload.password = senhaPadrao;
-        await userCadastro(payload);
+        await userCadastro(payload1);
         alert("Usuário cadastrado com sucesso!");
       }
 
@@ -164,7 +170,6 @@ export default function UserModal({
             />
           </div>
 
-          {/* ✅ NOVO CAMPO: TIPO DE USUÁRIO */}
           <div>
             <label className="mb-2 block text-sm font-medium text-[#1D3567]">
               Tipo de Permissão
