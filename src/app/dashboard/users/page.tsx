@@ -2,17 +2,9 @@
 
 import { useState, useEffect } from "react";
 import UserModal from "../../../components/modals/UserModal";
-import { userGetAll, userDelete } from "../../../services/user-service"; 
+import { userGetAll, userPut } from "../../../services/user-service";
 
-import {
-  Search,
-  Plus,
-  Shield,
-  UserCheck,
-  Pencil,
-  Trash2,
-  Bell,
-} from "lucide-react";
+import { Plus, Shield, UserCheck, Pencil, Ban, Bell } from "lucide-react";
 
 interface User {
   id: number;
@@ -25,11 +17,19 @@ interface User {
 
 export default function UsersPage() {
   const [openModal, setOpenModal] = useState(false);
-  const [usuarioSelecionado, setUsuarioSelecionado] = useState<User | null>(null);
-  
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState<User | null>(
+    null,
+  );
+
   const [usersList, setUsersList] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Carrega o ID do usuário logado para evitar auto-exclusão
+  const currentAdminId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("@AzulFinancas:userId")
+      : null;
 
   const carregarUsuarios = async () => {
     try {
@@ -49,14 +49,36 @@ export default function UsersPage() {
     carregarUsuarios();
   }, []);
 
-  const handleDeletarUsuario = async (id: number) => {
-    if (confirm("Tem certeza que deseja remover este usuário?")) {
+  const handleDeletarUsuario = async (user: User) => {
+    if (currentAdminId && String(user.id) === String(currentAdminId)) {
+      alert("Ação inválida: Você não pode desativar sua própria conta administrativa.");
+      return;
+    }
+
+    if (confirm(`Tem certeza que deseja desativar o acesso de ${user.name}?`)) {
       try {
-        await userDelete(id);
-        setUsersList((prev) => prev.filter((user) => user.id !== id));
-        alert("Usuário removido com sucesso!");
+        // 📦 Payload Limpo: Enviamos os dados sem o 'id' no corpo, 
+        // já que o ID já vai na URL da requisição.
+        const payload = {
+          name: user.name,
+          email: user.email,
+          tipo: user.tipo,
+          planoUser: user.planoUser,
+          status: "INATIVO" // Mudança do status
+        };
+
+        // Envia apenas as propriedades limpas para a rota PUT
+        await userPut(payload, user.id);
+        
+        // Atualiza o estado local para atualizar a tabela na tela
+        setUsersList((prev) =>
+          prev.map((u) => (u.id === user.id ? { ...u, status: "INATIVO" } : u))
+        );
+        
+        alert("Usuário desativado com sucesso!");
       } catch (err) {
-        alert("Erro ao tentar remover o usuário.");
+        console.error("Erro ao desativar usuário:", err);
+        alert("O servidor rejeitou a atualização. Verifique as permissões ou os campos obrigatórios.");
       }
     }
   };
@@ -162,7 +184,9 @@ export default function UsersPage() {
       <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#1D3567]">Lista de usuários</h2>
+            <h2 className="text-2xl font-bold text-[#1D3567]">
+              Lista de usuários
+            </h2>
             <p className="mt-1 text-sm text-slate-500">
               Gerencie todos os usuários da plataforma.
             </p>
@@ -172,11 +196,15 @@ export default function UsersPage() {
         {/* CONTEÚDO CONDICIONAL DA TABELA */}
         <div className="mt-6 overflow-x-auto">
           {loading ? (
-            <p className="py-10 text-center text-slate-500">Carregando usuários...</p>
+            <p className="py-10 text-center text-slate-500">
+              Carregando usuários...
+            </p>
           ) : error ? (
             <p className="py-10 text-center text-red-500">{error}</p>
           ) : usersList.length === 0 ? (
-            <p className="py-10 text-center text-slate-500">Nenhum usuário encontrado.</p>
+            <p className="py-10 text-center text-slate-500">
+              Nenhum usuário encontrado.
+            </p>
           ) : (
             <table className="w-full border-separate border-spacing-y-3">
               <thead>
@@ -190,7 +218,6 @@ export default function UsersPage() {
               </thead>
 
               <tbody>
-                {/* CORREÇÃO: O .map() entra apenas aqui para gerar as linhas da tabela */}
                 {usersList.map((user) => (
                   <tr
                     key={user.id}
@@ -224,17 +251,15 @@ export default function UsersPage() {
 
                     <td className="px-4 py-5">
                       <div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          user.status === "ATIVO"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        
-                        {user.status}
-                        
-                      </span>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${
+                            user.status === "ATIVO"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {user.status}
+                        </span>
                       </div>
                     </td>
 
@@ -253,12 +278,13 @@ export default function UsersPage() {
                           <Pencil size={16} />
                           Editar
                         </button>
+                        {/* Altere esta linha no seu botão de Excluir */}
                         <button
-                          onClick={() => handleDeletarUsuario(user.id)}
+                          onClick={() => handleDeletarUsuario(user)} // ⬅️ Passando o objeto 'user' inteiro aqui
                           className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
                         >
-                          <Trash2 size={16} />
-                          Excluir
+                          <Ban size={20} className="text-red-500" />
+                          Inativar
                         </button>
                       </div>
                     </td>
@@ -271,14 +297,14 @@ export default function UsersPage() {
       </div>
 
       {/* MODAL DE CONTROLE */}
-      <UserModal 
-        open={openModal} 
-        user={usuarioSelecionado} 
+      <UserModal
+        open={openModal}
+        user={usuarioSelecionado}
         onClose={() => {
           setOpenModal(false);
           setUsuarioSelecionado(null);
-        }} 
-        onSave={() => carregarUsuarios()} 
+        }}
+        onSave={() => carregarUsuarios()}
       />
     </section>
   );

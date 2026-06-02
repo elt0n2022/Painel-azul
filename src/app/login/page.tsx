@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation"; 
-import { userLogin } from "../../services/auth-service"; 
+import { useRouter } from "next/navigation";
+import { userLogin } from "../../services/auth-service";
 
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
@@ -20,62 +20,82 @@ export default function LoginPage() {
 
   // Função disparada no envio do formulário
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError(null);
+    e.preventDefault();
+    setError(null);
 
-  if (!email || !password) {
-    setError("Por favor, preencha todos os campos.");
-    return;
-  }
-
-  try {
-    setLoading(true);
-
-    const response = await userLogin({ email, password });
-    
-    // 🔍 DEBUG: Abra o F12 no navegador e veja o formato exato que seu NestJS está respondendo!
-    console.log("Retorno do Login:", response);
-
-    if (response) {
-      // Extrai os dados tentando ler de dentro de 'user' ou direto da raiz da resposta
-      const dadosDoUsuario = response.user || response;
-      
-      // Converte para Maiúsculo para evitar problemas de "admin" vs "ADMIN"
-      const userTipo = String(dadosDoUsuario?.email || "").toUpperCase();
-
-      const isAdmin = userTipo === "admin@email.com";
-
-      if (!isAdmin) {
-        setError("Acesso negado. Apenas administradores podem acessar esta plataforma.");
-        return;
-      }
-
-      // Salva os dados tratados no localStorage
-      if (dadosDoUsuario?.id) {
-        localStorage.setItem("@AzulFinancas:userId", String(dadosDoUsuario.id));
-      }
-
-      localStorage.setItem("@AzulFinancas:user", JSON.stringify(dadosDoUsuario));
-
-      if (response.token) {
-        localStorage.setItem("@AzulFinancas:token", response.token);
-      }
-
-      router.push("/dashboard");
-    } else {
-      setError("Erro ao processar dados de login do servidor.");
+    if (!email || !password) {
+      setError("Por favor, preencha todos os campos.");
+      return;
     }
-  } catch (err: any) {
-    console.error("Erro capturado no Login:", err);
-    setError(
-      err?.response?.data?.message || 
-      err?.message ||
-      "Falha ao realizar o login. Verifique suas credenciais."
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+
+    try {
+      setLoading(true);
+
+      const response = await userLogin({
+        email: email.trim(),
+        password: password,
+        tipo: "ADMIN", // Forçado como string direta
+      });
+
+      // 🔍 DEBUG: Remova ou comente em produção
+      console.log("Retorno do Login:", response);
+
+      if (response) {
+        // Extrai os dados tentando ler de dentro de 'user' ou direto da raiz da resposta
+        const dadosDoUsuario = response.user || response;
+
+        // Converte para Maiúsculo para evitar problemas de "admin" vs "ADMIN"
+        const userTipo = String(dadosDoUsuario?.tipo || "").toUpperCase();
+
+        // 🚨 VALIDAÇÃO DO TIPO DE USUÁRIO
+        if (userTipo === "ADMIN") {
+          // Salva os dados tratados no localStorage para o Administrador
+          if (dadosDoUsuario?.id) {
+            localStorage.setItem(
+              "@AzulFinancas:userId",
+              String(dadosDoUsuario.id),
+            );
+          }
+          localStorage.setItem(
+            "@AzulFinancas:user",
+            JSON.stringify(dadosDoUsuario),
+          );
+          if (response.token) {
+            localStorage.setItem("@AzulFinancas:token", response.token);
+          }
+
+          // Redireciona para a área administrativa
+          router.push("/dashboard");
+        } else if (userTipo === "USER") {
+          // Se for um usuário comum, limpamos qualquer resquício de login anterior por segurança
+          localStorage.removeItem("@AzulFinancas:userId");
+          localStorage.removeItem("@AzulFinancas:user");
+          localStorage.removeItem("@AzulFinancas:token");
+
+          setError(
+            "Acesso negado. Esta plataforma é exclusiva para administradores.",
+          );
+
+          // CASO QUEIRA REDIRECIONAR O USUÁRIO COMUM PARA OUTRA PÁGINA NO FUTURO:
+          // localStorage.setItem("@AzulFinancas:user", JSON.stringify(dadosDoUsuario));
+          // router.push("/home-cliente");
+        } else {
+          setError("Tipo de usuário não reconhecido pelo sistema.");
+        }
+      } else {
+        setError("Erro ao processar dados de login do servidor.");
+      }
+    } catch (err: any) {
+      console.error("Erro capturado no Login:", err);
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Falha ao realizar o login. Verifique suas credenciais.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className="flex h-screen overflow-hidden bg-[#EEF3FB]">

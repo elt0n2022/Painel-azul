@@ -75,7 +75,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // SOLUÇÃO: Centraliza todas as chamadas de API em uma única função assíncrona paralela
   const carregarTodosOsDados = async () => {
     const userId = localStorage.getItem("@AzulFinancas:userId");
 
@@ -83,12 +82,11 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
 
-      // Debug simples fora do Promise.all para não quebrar a tipagem do TypeScript
       if (!userId || userId === "undefined") {
         console.log("Aviso: userId inválido no localStorage:", userId);
       }
 
-      // CORREÇÃO VISADA: O quarto elemento agora retorna um array puro se o userId falhar, respeitando a tipagem
+      // Chamadas paralelas à API
       const [dadosUsuarios, dadosPlanos, resUser, metrics, payData] =
         await Promise.all([
           userGetAll().catch(() => []),
@@ -96,23 +94,35 @@ export default function DashboardPage() {
           userId && userId !== "undefined" ? userGet().catch(() => null) : null,
           userId && userId !== "undefined"
             ? dashboardGetChartData(userId).catch(() => [])
-            : [], // <--- Retorna um array vazio diretamente, eliminando o erro de 'void'
+            : [],
           dashboardGetTransactions().catch(() => []),
         ]);
 
-      // Atualiza os estados ordenadamente
+      // Atualiza as listas globais do dashboard
       setUsersList(dadosUsuarios || []);
       setPlans(dadosPlanos || []);
       setChartData(Array.isArray(metrics) ? metrics : []);
       setRecentTransactions(Array.isArray(payData) ? payData : []);
 
-      if (resUser) {
-        setPerfilUsuario(
-          resUser?.data || (Array.isArray(resUser) ? resUser[0] : resUser),
+      // 🔍 LÓGICA DE DETECÇÃO DO USUÁRIO LOGADO
+      if (resUser && resUser.data && !Array.isArray(resUser.data)) {
+        // 1ª Opção: Se a API retornou o objeto direto do usuário logado
+        setPerfilUsuario(resUser.data);
+      } else if (userId && dadosUsuarios && dadosUsuarios.length > 0) {
+        // 2ª Opção (Fallback Seguro): Encontra o usuário correspondente ao ID logado de dentro da lista geral
+        const usuarioLogado = dadosUsuarios.find(
+          (u: UserProfile) => String(u.id) === String(userId)
         );
+        
+        if (usuarioLogado) {
+          setPerfilUsuario(usuarioLogado);
+        } else {
+          setPerfilUsuario(null);
+        }
       } else {
         setPerfilUsuario(null);
       }
+
     } catch (err: any) {
       console.error("Erro ao carregar dados unificados do painel:", err);
       setError(

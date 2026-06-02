@@ -14,7 +14,7 @@ export const authLogin = (data: any) => apiRequest("POST", "/users/login", data)
 export const userGetAll = () => apiRequest("GET", "/admin");
 
 // Deleta um usuário do sistema
-export const userDelete = (userId: string | number) => apiRequest("DELETE", `/users/${userId}`);
+export const userDelete = (userId: string | number) => apiRequest("DELETE", `/Admin/${userId}`);
 
 export const userGet = () => apiRequest("GET", `/admin`);
 export const userPut = (dados: any, userId: string | number) => apiRequest("PUT", `/users/admin/${userId}`, dados);

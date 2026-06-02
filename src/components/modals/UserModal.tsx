@@ -3,18 +3,22 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { userCadastro } from "@/src/services/auth-service";
+// 💡 Importe o serviço responsável pela edição de usuário aqui. Exemplo fictício:
+import { userPut } from "@/src/services/user-service"; 
 
 export interface UserFormData {
   name: string;
   email: string;
-  password: string;
+  password?: string;
+  tipo: "USER" | "ADMIN"; // ✅ Campo adicionado à interface
 }
 
 interface UserModalProps {
   open: boolean;
   onClose: () => void;
-  onSave?: (data: UserFormData) => void;
-  user?: (UserFormData & { id: number }) | null;
+  onSave?: (data: any) => void;
+  // ✅ Atualizado para refletir a tipagem correta com 'tipo'
+  user?: (UserFormData & { id: number }) | null; 
 }
 
 export default function UserModal({
@@ -25,7 +29,8 @@ export default function UserModal({
 }: UserModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const senha = "123456"
+  const [tipo, setTipo] = useState<"USER" | "ADMIN">("USER"); // ✅ Estado para controlar o tipo
+  const senhaPadrao = "123456";
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -33,6 +38,7 @@ export default function UserModal({
       if (user) {
         setName(user.name || "");
         setEmail(user.email || "");
+        setTipo(user.tipo || "USER"); // ✅ Alimenta o estado ao editar
       } else {
         limparFormulario();
       }
@@ -44,6 +50,7 @@ export default function UserModal({
   const limparFormulario = () => {
     setName("");
     setEmail("");
+    setTipo("USER"); // ✅ Reseta para o padrão
   };
 
   const handleResetAndClose = () => {
@@ -59,20 +66,31 @@ export default function UserModal({
       return;
     }
 
-    const payload: UserFormData = {
+    // Estrutura o payload padrão
+    const payload: any = {
       name: name.trim(),
       email: email.trim().toLowerCase(),
-      password: senha,
+      tipo: tipo, // ✅ Injetando o tipo no payload
     };
 
     try {
       setLoading(true);
 
-      // Envia a requisição para a API
-      await userCadastro(payload);
+      if (user?.id) {
+        // 🔄 MODO EDIÇÃO: Envia para a rota PUT utilizando o ID do usuário
+        // OBS: Geralmente APIs de atualização não exigem o envio da senha
+        await userPut(payload, user.id);
+        alert("Usuário atualizado com sucesso!");
+      } else {
+        // 🆕 MODO CRIAÇÃO: Mantém o comportamento de cadastro enviando a senha padrão
+        payload.password = senhaPadrao;
+        await userCadastro(payload);
+        alert("Usuário cadastrado com sucesso!");
+      }
 
       if (onSave) {
-        await onSave(payload);
+        // Retorna o payload com o id injetado para atualizar a listagem local em tela se necessário
+        await onSave(user?.id ? { ...payload, id: user.id } : payload);
       }
 
       handleResetAndClose();
@@ -112,7 +130,7 @@ export default function UserModal({
           </button>
         </div>
 
-        {/* FORM (Adicionado o onSubmit aqui 🚀) */}
+        {/* FORM */}
         <form onSubmit={handleSubmit} className="mt-8 grid gap-5">
           {/* NAME */}
           <div>
@@ -144,6 +162,22 @@ export default function UserModal({
               disabled={loading}
               required
             />
+          </div>
+
+          {/* ✅ NOVO CAMPO: TIPO DE USUÁRIO */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#1D3567]">
+              Tipo de Permissão
+            </label>
+            <select
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value as "USER" | "ADMIN")}
+              className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-[#2C5292] text-slate-800 bg-white transition cursor-pointer"
+              disabled={loading}
+            >
+              <option value="USER">Usuário Comum (USER)</option>
+              <option value="ADMIN">Administrador (ADMIN)</option>
+            </select>
           </div>
 
           {/* ACTIONS */}
