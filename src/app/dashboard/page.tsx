@@ -144,9 +144,7 @@ export default function DashboardPage() {
   }).format(receitaAcumuladaTotal);
 
   const somaUserIds = chartData.reduce((acc, item) => acc + (item.userId || 0), 0);
-  const volumeOperacoes = recentTransactions.length > 0 || temDadosGrafico
-    ? (somaUserIds / 2 + recentTransactions.length).toFixed(0)
-    : "0";
+  const volumeOperacoes = recentTransactions.length;
 
   const usuariosAtivos = usersList.filter((u) => u.status === "ATIVO").length;
   const usuariosAssinantes = usersList.filter((u) => u.planoUser === "BASICO" || u.planoUser === "MEDIO").length;
