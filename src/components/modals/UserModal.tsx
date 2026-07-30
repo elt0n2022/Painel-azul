@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { userCadastro } from "@/src/services/auth-service";
 // 💡 Importe o serviço responsável pela edição de usuário aqui. Exemplo fictício:
-import { userPut } from "@/src/services/user-service"; 
+import { userPut } from "@/src/services/user-service";
 
 export interface UserFormData {
   name: string;
@@ -18,7 +18,7 @@ interface UserModalProps {
   onClose: () => void;
   onSave?: (data: any) => void;
   // ✅ Atualizado para refletir a tipagem correta com 'tipo'
-  user?: (UserFormData & { id: number }) | null; 
+  user?: (UserFormData & { id: number }) | null;
 }
 //
 export default function UserModal({
@@ -103,9 +103,9 @@ export default function UserModal({
     } catch (error: any) {
       console.error("Erro ao salvar o usuário:", error);
       alert(
-        error?.response?.data?.message || 
-        error?.message || 
-        "Ocorreu um erro ao salvar os dados no servidor."
+        error?.response?.data?.message ||
+          error?.message ||
+          "Ocorreu um erro ao salvar os dados no servidor.",
       );
     } finally {
       setLoading(false);
@@ -122,7 +122,9 @@ export default function UserModal({
               {user ? "Editar usuário" : "Novo usuário"}
             </h2>
             <p className="mt-1 text-slate-500">
-              {user ? "Altere as informações abaixo." : "Preencha os dados do novo usuário."}
+              {user
+                ? "Altere as informações abaixo."
+                : "Preencha os dados do novo usuário."}
             </p>
           </div>
 
@@ -201,7 +203,11 @@ export default function UserModal({
               disabled={loading}
               className="h-12 rounded-2xl bg-gradient-to-r from-[#1D3567] to-[#2C5292] px-6 font-medium text-white shadow-lg transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Salvando..." : user ? "Atualizar dados" : "Salvar usuário"}
+              {loading
+                ? "Salvando..."
+                : user
+                  ? "Atualizar dados"
+                  : "Salvar usuário"}
             </button>
           </div>
         </form>
