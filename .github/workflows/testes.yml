@@ -1,0 +1,32 @@
+name: Executar Testes Automatizados
+
+# Define QUANDO a automação vai rodar
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Define O QUE a automação vai fazer
+jobs:
+  rodar-testes:
+    runs-on: ubuntu-latest # O servidor onde os testes vão rodar
+
+    steps:
+      # 1. Baixa o código do seu repositório para o servidor do GitHub
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      # 2. Configura a linguagem/ambiente (ex: Node.js)
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      # 3. Instala as dependências do projeto
+      - name: Instalar dependências
+        run: npm install
+
+      # 4. Executa o comando de teste
+      - name: Rodar testes
+        run: npm test
