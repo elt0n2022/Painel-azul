@@ -3,9 +3,9 @@ name: Executar Testes Automatizados
 # Define QUANDO a automação vai rodar
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 # Define O QUE a automação vai fazer
 jobs:
@@ -21,7 +21,7 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: "18"
 
       # 3. Instala as dependências do projeto
       - name: Instalar dependências
@@ -29,4 +29,4 @@ jobs:
 
       # 4. Executa o comando de teste
       - name: Rodar testes
-        run: npm test
+        run: npm run test:e2e
