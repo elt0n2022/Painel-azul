@@ -1,32 +1,32 @@
 name: Executar Testes Automatizados
 
-# Define QUANDO a automação vai rodar
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
-# Define O QUE a automação vai fazer
 jobs:
   rodar-testes:
-    runs-on: ubuntu-latest # O servidor onde os testes vão rodar
+    runs-on: ubuntu-latest
 
     steps:
-      # 1. Baixa o código do seu repositório para o servidor do GitHub
       - name: Baixar o código
         uses: actions/checkout@v4
 
-      # 2. Configura a linguagem/ambiente (ex: Node.js)
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: '18'
 
-      # 3. Instala as dependências do projeto
+      # Instala as dependências (incluindo o @playwright/test)
       - name: Instalar dependências
-        run: npm install
+        run: npm ci
 
-      # 4. Executa o comando de teste
-      - name: Rodar testes
+      # Instala os navegadores e dependências de SO necessárias
+      - name: Instalar navegadores do Playwright
+        run: npx playwright install --with-deps
+
+      # Executa os testes
+      - name: Rodar testes E2E com Playwright
         run: npm run test:e2e
